@@ -7,6 +7,10 @@ Version: 1.0
 
 This is a dice-rolling script designed to handle rolling multiple dice of number of sides at once as a custom script for use with [StreamLabs Chatbot](https://streamlabs.com/chatbot).
 
+Due to StreamLabs Chatbot being written in .NET, [IronPython](http://ironpython.net/) is required as the interpreter in order for this project to work, which is also the same reason this project is written in Python 2.7.
+
+All other questions about how to use this script within the Chatbot can be found in their documentation.
+
 ### Features
 
 * Command: !roll
