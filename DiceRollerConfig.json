@@ -1,0 +1,5 @@
+﻿{
+  "command": "!roll",
+  "permission": "Everyone",
+  "cooldown": 2
+}

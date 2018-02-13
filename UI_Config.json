@@ -1,0 +1,33 @@
+﻿{
+    "output_file": "DiceRollerConfig.json",
+    "openReadMe": {
+        "type": "button",
+        "label": "Open Readme.txt",
+        "tooltip": "Opens the 'Readme.txt' for this script.",
+        "function": "OpenReadMe",
+        "wsevent": "",
+        "group": ""
+    },
+    "command": {
+        "type": "textbox",
+        "value": "!roll",
+        "label": "Command",
+        "tooltip": "Name of the Command",
+        "group": ""
+    },
+    "permission": {
+        "type": "dropdown",
+        "value": "Everyone",
+        "items": ["Everyone","Regular","Subscriber","Moderator"],
+        "label": "Permission level",
+        "tooltip": "Set the permission level for the command",
+        "group": ""
+    },
+    "cooldown": {
+        "type":"numberbox",
+        "label":"Cooldown (seconds)",
+        "value":2,
+        "tooltip":"Cooldown in seconds",
+        "group": "Cooldown"
+    }
+}
