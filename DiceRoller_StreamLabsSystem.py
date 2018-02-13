@@ -43,6 +43,7 @@ m_settings_file = os.path.join(os.path.dirname(__file__), "DiceRollerConfig.json
 # ---------------------------------------
 # Classes
 # ---------------------------------------
+# noinspection PyPep8Naming
 class Settings(object):
     """ Load in saved settings file if available else set default values. """
     def __init__(self, settings_file=None):
@@ -71,6 +72,10 @@ class Settings(object):
         return
 
 
+# ---------------------------------------------------------
+#    [Required]    Functions With These Specific Signatures
+# ---------------------------------------------------------
+# noinspection PyPep8Naming
 def Init():
     """[Required] Initialize Data (Only called on Load)"""
     global m_settings
@@ -79,27 +84,32 @@ def Init():
     return
 
 
+# noinspection PyPep8Naming
 def ReloadSettings(json_data):
     """Reload Settings on Save"""
     m_settings.reload(json_data)
     return
 
 
+# noinspection PyPep8Naming
 def Tick():
     """[Required] Tick Function"""
     return
 
 
+# noinspection PyPep8Naming,PyUnusedLocal
 def ScriptToggled(state):
     return
 
 
+# noinspection PyPep8Naming
 def OpenReadMe():
     location = os.path.join(os.path.dirname(__file__), "README.txt")
     os.startfile(location)
     return
 
 
+# noinspection PyPep8Naming
 def Execute(data):
     """[Required] Execute Data / Process Messages"""
     global m_settings, ScriptName
@@ -147,6 +157,9 @@ def Execute(data):
     return
 
 
+# ---------------------------------------------------------
+#    Other Functions
+# ---------------------------------------------------------
 def pre_process_data(data):
     """Given the data object that comes from Twitch via Streamlabs Chatbot,
         pull out the parameters we want and map them to a much simpler list.
