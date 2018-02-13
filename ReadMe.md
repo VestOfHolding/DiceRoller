@@ -5,7 +5,7 @@ Created by: VestOfHolding - www.twitch.tv/vestofholding
 
 Version: 1.0
 
-This is a dice-rolling script designed to handle rolling multiple dice of number of sides at once.
+This is a dice-rolling script designed to handle rolling multiple dice of number of sides at once as a custom script for use with [StreamLabs Chatbot](https://streamlabs.com/chatbot).
 
 ### Features
 
