@@ -27,15 +27,10 @@ Version = "1.0"
 # This should match against strings like "2d6 + 4d20 + 7"
 m_validChars = re.compile('[0-9+d ]+', re.IGNORECASE)
 # This should match against the individual dice argument, such as "2d20", but note the dice number and dice side limit.
-m_rollFormat = re.compile('^([1-9]\d?)d([1-9]\d{0,3})$', re.IGNORECASE)
+m_rollFormat = re.compile('^([1-9]\d?)d([1-9]\d{0,4})$', re.IGNORECASE)
 
 m_max_die_sides = 1000
 m_max_die_num = 10
-
-# Error Messages
-m_default_error = "Invalid parameter found. Unable to roll "
-m_dice_num_max_exceeded = "Please don't ask to roll more than " + str(m_max_die_num) + " dice at a time."
-m_no_valid_rolls = "No valid dice found to roll."
 
 m_settings_file = os.path.join(os.path.dirname(__file__), "DiceRollerConfig.json")
 
@@ -127,18 +122,27 @@ def Execute(data):
         Parent.SendTwitchMessage("Rolling 1d20... " + str(Parent.GetRandom(1, 21)))
         return
 
-    # Pre-process the parameters to get them in to a more usable format
-    # Roll all the dice we can find
-    dice_data = pre_process_data(data)
+    try:
+        # Pre-process the parameters to get them in to a more usable format
+        dice_data = pre_process_data(data)
 
-    dice_rolls = roll_all_dice(dice_data)
+        # Roll all the dice we can find
+        dice_rolls = roll_all_dice(dice_data)
 
-    if len(dice_rolls) < 1:
-        return
+        # If we somehow got through the previous code and have no resulting dice
+        # raise dat error
+        if len(dice_rolls) < 1:
+            raise NoDiceFoundError()
 
-    dice_sum = sum(dice_rolls)
+        dice_sum = sum(dice_rolls)
 
-    if dice_sum < 1:
+        # A similar pre-caution as above.
+        if dice_sum < 1:
+            raise NoDiceFoundError()
+
+    except DiceError as de:
+        # It's here at the top level that we look at the error and let the user know about the error.
+        Parent.SendTwitchMessage(de.message)
         return
 
     response = "Rolling "
@@ -171,12 +175,10 @@ def pre_process_data(data):
     raw_message = "".join(data.Message.split(" ")[1:])
 
     if special_check(raw_message):
-        Parent.SendTwitchMessage("Don't test me, human.")
-        return []
+        raise NonASCIIDiceError()
 
     if not re.match(m_validChars, raw_message):
-        Parent.SendTwitchMessage("Unsupported characters found. No dice were rolled.")
-        return []
+        raise InvalidDiceCharacterError()
 
     # Now turn that raw String in to a more workable list of the dice parameters
     raw_message = raw_message.replace(" ", "")
@@ -207,25 +209,26 @@ def roll_all_dice(dice_data_set):
     dice_results = []
 
     if len(dice_data_set) < 1:
-        return dice_results
+        raise NoDiceFoundError()
 
-    # There doesn't seem to be a way to just get the list of parameters, so we'll do it this way.
-    # The first parameter is the command itself, so skip that one.
     for dice in dice_data_set:
         dice_roll = dice.strip()
 
-        # Not sure we have to make sure it's an int, but I'm still used to type safety.
-        dice_result = handle_die_roll(dice_roll)
+        try:
+            dice_result = handle_die_roll(dice_roll)
 
-        # If anything went wrong that meant we got no results, it was an error and we're done.
-        if len(dice_result) < 1:
-            return []
+            # If somehow we got no valid results but no errors were raised, that's a problem.
+            if len(dice_result) < 1:
+                raise NoDiceFoundError()
+
+        except DiceError:
+            # Raise the error up to the calling method that will handle everything more properly.
+            raise
 
         dice_results.extend(dice_result)
 
         if len(dice_results) > m_max_die_num:
-            Parent.SendTwitchMessage(m_dice_num_max_exceeded)
-            return []
+            raise InvalidDiceCountError()
 
     return dice_results
 
@@ -244,15 +247,13 @@ def handle_die_roll(dice):
     # This script also supports flat integer additions to the roll
     if dice.isdigit():
         if int(dice) > 1000:
-            Parent.SendTwitchMessage("Please don't use a modifier higher than " + str(m_max_die_sides))
-            return []
+            raise InvalidDiceModifierError()
         return [int(dice)]
 
     regex_result = re.match(m_rollFormat, dice)
 
     if not regex_result:
-        Parent.SendTwitchMessage(m_default_error + dice)
-        return []
+        raise DiceError(dice)
 
     groups = regex_result.groups()
 
@@ -260,25 +261,21 @@ def handle_die_roll(dice):
     # 1. How many dice to roll
     # 2. How many sides these dice have
     if len(groups) != 2:
-        Parent.SendTwitchMessage(m_default_error + dice)
-        return []
+        raise DiceError(dice)
 
     # ALL OF THE INPUT CHECKING
     num_dice = int(groups[0])
 
     if num_dice > m_max_die_num:
-        Parent.SendTwitchMessage(m_dice_num_max_exceeded)
-        return []
+        raise InvalidDiceCountError()
 
     num_dice_sides = int(groups[1])
 
     if num_dice_sides > m_max_die_sides:
-        Parent.SendTwitchMessage("Please don't ask to roll dice with more than " + str(m_max_die_sides) + " sides.")
-        return []
+        raise InvalidDiceSideError(dice)
 
     if num_dice < 1 or num_dice_sides < 2:
-        Parent.SendTwitchMessage(m_default_error + dice)
-        return []
+        raise DiceError(dice)
 
     # Now get to the actual die rolling.
     die_roll_results = []
@@ -289,9 +286,66 @@ def handle_die_roll(dice):
         # If for some reason we went past all of the above checking and something still happened
         # the likely result will be that we get a 0. Therefore check for that and report the error.
         if die_result < 1:
-            Parent.SendTwitchMessage(m_default_error + dice)
-            return []
+            raise DiceError(dice)
 
         die_roll_results.append(die_result)
 
     return die_roll_results
+
+
+# ---------------------------------------------------------
+#    Exceptions
+# ---------------------------------------------------------
+class DiceError(Exception):
+    """Basic exception for errors raised by trying to roll dice"""
+    def __init__(self, dice, msg=None):
+        if msg is None:
+            if dice is None:
+                msg = "Invalid parameter found. Unable to roll dice."
+            else:
+                msg = "Invalid parameter found. Unable to roll " + str(dice)
+
+        super(DiceError, self).__init__(msg)
+        self.dice = dice
+
+
+class InvalidDiceCountError(DiceError):
+    """Tried to roll an invalid number of dice"""
+    def __init__(self):
+        super(InvalidDiceCountError, self).__init__(
+            None, msg="Please don't ask to roll more than " + str(m_max_die_num) + " dice at a time.")
+
+
+class InvalidDiceSideError(DiceError):
+    """Tried to roll a dice with an invalid number of sides."""
+    def __init__(self, dice):
+        super(InvalidDiceSideError, self).__init__(
+            dice, msg="Please don't ask to roll dice with more than " + str(m_max_die_sides) + " sides.")
+
+
+class InvalidDiceModifierError(DiceError):
+    """Tried to roll a dice with an invalid number of sides."""
+    def __init__(self):
+        super(InvalidDiceModifierError, self).__init__(
+            None, msg="Please don't use a modifier higher than " + str(m_max_die_sides))
+
+
+class NoDiceFoundError(DiceError):
+    """No valid dice were found that could be rolled."""
+    def __init__(self):
+        super(NoDiceFoundError, self).__init__(None, msg="No valid dice found to roll.")
+
+
+class InvalidDiceCharacterError(DiceError):
+    """Unsupported characters were found in the dice input."""
+    def __init__(self, msg=None):
+        if msg is None:
+            msg = "Unsupported characters found. No dice were rolled."
+
+        super(InvalidDiceCharacterError, self).__init__(None, msg)
+
+
+class NonASCIIDiceError(InvalidDiceCharacterError):
+    """Non-ASCII characters were found in the user input."""
+    def __init__(self):
+        super(NonASCIIDiceError, self).__init__(msg="I will shit on your desk.")
