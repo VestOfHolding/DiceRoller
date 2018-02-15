@@ -11,33 +11,43 @@ Due to StreamLabs Chatbot being written in .NET, [IronPython](http://ironpython.
 
 All other questions about how to use this script within the Chatbot can be found in their documentation.
 
-### Features
+## Features and Usage
 
-* Command: !roll
-* If no further dice information is provided, the default is to roll one d20.
-* Roll up to 10 dice of any number of sides up to 1000.
-  * Example: !roll 3d10 + 5d20 + 1d1000
-* Watch as the script outputs the result of each die roll as well as the total.
-  * The 10 dice limit is to limit how much this impacts the chat.
-* Add positive modifiers to your roll up to 1000.
-  * Example: !roll 2d20 + 10
-  * Modifiers count towards the 10 roll limit.
-* Configurable cooldown with a default of 2 seconds.
+This script uses [dice notation](https://en.wikipedia.org/wiki/Dice_notation) to specify what dice and how many you want to roll. The current version supports only the [standard notation](https://en.wikipedia.org/wiki/Dice_notation#Standard_notation). It will then output each individual die result, as well as the total of all dice rolled.
 
-Examples of invalid uses of this command include:
+* `!roll`
+  * With no other parameters specified, this script will roll 1d20.
+  * Example output: `Rolling 1d20... 14`
+* `!roll 1d20`
+  * The normal standard notation is accepted.
+  * Example output: `Rolling 1d20... 2`
+* `!roll 2d20 + 2d6`
+  * Multiple standard notation dice of different sides can be rolled together.
+  * Example output: `Rolling 2d20 + 2d6... 14 + 20 + 2 + 3 = 39`
+* `!roll 2d6 + 5`
+  * Integer modifiers can be added to a dice roll.
+  * Example output: `Rolling 2d6 + 5... 2 + 3 + 5= 10`
 
-* !roll 0d6
-* !roll 2d-8
-* !roll 100d10
-  * This exceeds the 10 dice limit.
-* !roll 4d6 + 8d50
-  * This exceeds the 10 dice limit.
-* !roll 2d1200
-  * This exceeds the 1000 side limit.
-* !roll 4d6 - 8
-  * No negative modifiers can be used currently.
-* !roll 1dπ
-  * You know who you are.
+### Restrictions
+
+* This script currently cannot handle any arithmetic operators besides "+".
+  * `!roll 1d20 - 5` will throw an error.
+* No more than ten dice/modifiers can be used in one command. This is to minimize the impact that displaying all of the individual dice rolls has on chat.
+  * `!roll 11d6`, `!roll 8d6 + 4d8`, and `!roll 10d6 + 5` are all examples of rolls that will hit this limit.
+* The number of sides a dice has cannot exceed 1000.
+  * `!roll 1d1200` will throw an error.
+* Any integer modifier added to the roll cannot exceed 1000.
+  * `!roll 1d20 + 2000` will throw an error.
+
+
+## Configurable Values
+
+| Value  | Default |
+| ------------- | ------------- |
+| Command  | !roll |
+| Permission | Everyone |
+| Cooldown (seconds)  | 2 |
+
 
 ## Version History
 
