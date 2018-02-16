@@ -21,6 +21,9 @@ This script uses [dice notation](https://en.wikipedia.org/wiki/Dice_notation) to
 * `!roll 1d20`
   * The normal standard notation is accepted.
   * Example output: `Rolling 1d20... 2`
+* `!roll d6`
+  * If the number of dice is not specified, the roll will default to 1.
+  * Example output: `Rolling d6... 5`
 * `!roll 2d20 + 2d6`
   * Multiple standard notation dice of different sides can be rolled together.
   * Example output: `Rolling 2d20 + 2d6... 14 + 20 + 2 + 3 = 39`
@@ -47,6 +50,7 @@ This script uses [dice notation](https://en.wikipedia.org/wiki/Dice_notation) to
 | Command  | !roll |
 | Permission | Everyone |
 | Cooldown (seconds)  | 2 |
+| User cooldown (seconds) | 3 |
 
 
 ## Version History

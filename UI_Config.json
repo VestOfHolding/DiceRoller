@@ -28,6 +28,13 @@
         "label":"Cooldown (seconds)",
         "value":2,
         "tooltip":"Cooldown in seconds",
-        "group": "Cooldown"
+        "group":"Cooldown"
+    },
+    "user_cooldown": {
+        "type":"numberbox",
+        "label":"User cooldown (seconds)",
+        "value":3,
+        "tooltip":"User cooldown in seconds",
+        "group":"Cooldown"
     }
 }

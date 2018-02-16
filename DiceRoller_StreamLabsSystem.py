@@ -27,7 +27,9 @@ Version = "1.0"
 # This should match against strings like "2d6 + 4d20 + 7"
 m_validChars = re.compile('[0-9+d ]+', re.IGNORECASE)
 # This should match against the individual dice argument, such as "2d20", but note the dice number and dice side limit.
-m_rollFormat = re.compile('^([1-9]\d?)d([1-9]\d{0,4})$', re.IGNORECASE)
+# The limits are a little higher than the actual limits so that users can change those limits in the future better,
+# and to increase the liklihood of accurate error messages being produced.
+m_rollFormat = re.compile('^([1-9]\d{0,7})?(d)([1-9]\d{0,7})$', re.IGNORECASE)
 
 m_max_die_sides = 1000
 m_max_die_num = 10
@@ -49,6 +51,8 @@ class Settings(object):
                 self.command = "!roll"
                 self.permission = "Everyone"
                 self.cooldown = 2
+                self.user_cooldown = 3
+        return
 
     def reload(self, data):
         """ Reload settings from Chatbot user interface by given data. """
@@ -109,12 +113,12 @@ def Execute(data):
     """[Required] Execute Data / Process Messages"""
     global m_settings, ScriptName
 
-    if not data.IsChatMessage()\
-            or data.GetParam(0).lower() != m_settings.command:
+    if not data.IsChatMessage() or data.GetParam(0).lower() != m_settings.command:
         return
 
-    if Parent.IsOnCooldown(ScriptName, m_settings.command)\
-            or not Parent.HasPermission(data.User, m_settings.permission, ""):
+    if not Parent.HasPermission(data.User, m_settings.permission, "") or \
+            Parent.IsOnCooldown(ScriptName, m_settings.command) or \
+            Parent.IsOnUserCooldown(ScriptName, m_settings.command, data.User):
         return
 
     # If no specific dice are listed, perform default roll
@@ -174,7 +178,10 @@ def pre_process_data(data):
     # Retrieve the message as a String while ignoring the initial command
     raw_message = "".join(data.Message.split(" ")[1:])
 
-    if special_check(raw_message):
+    # Yes, this needs to happen in addition to the valid characters check that happens right after this.
+    # Because god knows what unicode shenanigans is happening that I don't feel like investigating
+    # for this script.
+    if non_ascii_check(raw_message):
         raise NonASCIIDiceError()
 
     if not re.match(m_validChars, raw_message):
@@ -185,10 +192,10 @@ def pre_process_data(data):
     return raw_message.split("+")
 
 
-def special_check(raw_message):
-    """Makes a special check for non-ASCII characters.
+def non_ascii_check(raw_message):
+    """Checks for the presence of non-ASCII characters in the input.
 
-    :param raw_message:
+    :param raw_message: The string input
     :return: True if a non-ASCII letter was found in the input. False otherwise.
     """
     try:
@@ -257,19 +264,22 @@ def handle_die_roll(dice):
 
     groups = regex_result.groups()
 
-    # We better have only two things:
-    # 1. How many dice to roll
-    # 2. How many sides these dice have
-    if len(groups) != 2:
+    # There should only be two possibilities:
+    # 1. We have a format like "d20", where we assume the number of dice is 1.
+    # 2. We have a format like "2d20" where the number of dice is given.
+    if len(groups) != 3 or str(groups[1]).lower() != "d":
         raise DiceError(dice)
 
-    # ALL OF THE INPUT CHECKING
-    num_dice = int(groups[0])
+    if groups[0] is None:
+        num_dice = 1
+    else:
+        num_dice = int(groups[0])
 
+    num_dice_sides = int(groups[2])
+
+    # ALL OF THE INPUT CHECKING
     if num_dice > m_max_die_num:
         raise InvalidDiceCountError()
-
-    num_dice_sides = int(groups[1])
 
     if num_dice_sides > m_max_die_sides:
         raise InvalidDiceSideError(dice)
