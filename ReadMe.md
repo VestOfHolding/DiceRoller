@@ -45,11 +45,11 @@ This script uses [dice notation](https://en.wikipedia.org/wiki/Dice_notation) to
 
 ## Configurable Values
 
-| Value  | Default |
+| Value | Default |
 | ------------- | ------------- |
-| Command  | !roll |
+| Command | !roll |
 | Permission | Everyone |
-| Cooldown (seconds)  | 2 |
+| Cooldown (seconds) | 2 |
 | User cooldown (seconds) | 3 |
 
 

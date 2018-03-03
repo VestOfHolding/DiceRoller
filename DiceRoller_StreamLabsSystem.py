@@ -38,7 +38,7 @@ m_settings_file = os.path.join(os.path.dirname(__file__), "DiceRollerConfig.json
 
 
 # ---------------------------------------
-# Classes
+# [Required]    Classes With These Specific Signatures
 # ---------------------------------------
 # noinspection PyPep8Naming
 class Settings(object):
@@ -72,7 +72,7 @@ class Settings(object):
 
 
 # ---------------------------------------------------------
-#    [Required]    Functions With These Specific Signatures
+# [Required]    Functions With These Specific Signatures
 # ---------------------------------------------------------
 # noinspection PyPep8Naming
 def Init():
@@ -114,16 +114,18 @@ def Execute(data):
     global m_settings, ScriptName
 
     if not data.IsChatMessage() or data.GetParam(0).lower() != m_settings.command:
+        post_execute()
         return
 
     if not Parent.HasPermission(data.User, m_settings.permission, "") or \
             Parent.IsOnCooldown(ScriptName, m_settings.command) or \
             Parent.IsOnUserCooldown(ScriptName, m_settings.command, data.User):
+        post_execute()
         return
 
     # If no specific dice are listed, perform default roll
     if data.GetParamCount() == 1:
-        Parent.SendTwitchMessage("Rolling 1d20... " + str(Parent.GetRandom(1, 21)))
+        post_execute("Rolling 1d20... " + str(Parent.GetRandom(1, 21)))
         return
 
     try:
@@ -146,7 +148,7 @@ def Execute(data):
 
     except DiceError as de:
         # It's here at the top level that we look at the error and let the user know about the error.
-        Parent.SendTwitchMessage(de.message)
+        post_execute(de.message)
         return
 
     response = "Rolling "
@@ -160,13 +162,12 @@ def Execute(data):
     else:
         response += str(dice_sum)
 
-    Parent.SendTwitchMessage(response)
-
+    post_execute(response)
     return
 
 
 # ---------------------------------------------------------
-#    Other Functions
+# Other Functions
 # ---------------------------------------------------------
 def pre_process_data(data):
     """Given the data object that comes from Twitch via Streamlabs Chatbot,
@@ -282,7 +283,7 @@ def handle_die_roll(dice):
         raise InvalidDiceCountError()
 
     if num_dice_sides > m_max_die_sides:
-        raise InvalidDiceSideError(dice)
+        raise InvalidDiceSideError()
 
     if num_dice < 1 or num_dice_sides < 2:
         raise DiceError(dice)
@@ -303,8 +304,19 @@ def handle_die_roll(dice):
     return die_roll_results
 
 
+def post_execute(message=None):
+    """Should always be called right before the script ends processing a command."""
+    if message is not None:
+        Parent.SendTwitchMessage(message)
+
+    Parent.AddUserCooldown(ScriptName, m_settings.command, data.User, m_settings.user_cooldown)
+    Parent.AddCooldown(ScriptName, m_settings.command, m_settings.cooldown)
+
+    return
+
+
 # ---------------------------------------------------------
-#    Exceptions
+# Exceptions
 # ---------------------------------------------------------
 class DiceError(Exception):
     """Basic exception for errors raised by trying to roll dice"""
@@ -328,9 +340,9 @@ class InvalidDiceCountError(DiceError):
 
 class InvalidDiceSideError(DiceError):
     """Tried to roll a dice with an invalid number of sides."""
-    def __init__(self, dice):
+    def __init__(self):
         super(InvalidDiceSideError, self).__init__(
-            dice, msg="Please don't ask to roll dice with more than " + str(m_max_die_sides) + " sides.")
+            None, msg="Please don't ask to roll dice with more than " + str(m_max_die_sides) + " sides.")
 
 
 class InvalidDiceModifierError(DiceError):
