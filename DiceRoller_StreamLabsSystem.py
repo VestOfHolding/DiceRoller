@@ -114,18 +114,18 @@ def Execute(data):
     global m_settings, ScriptName
 
     if not data.IsChatMessage() or data.GetParam(0).lower() != m_settings.command:
-        post_execute()
+        post_execute(data)
         return
 
     if not Parent.HasPermission(data.User, m_settings.permission, "") or \
             Parent.IsOnCooldown(ScriptName, m_settings.command) or \
             Parent.IsOnUserCooldown(ScriptName, m_settings.command, data.User):
-        post_execute()
+        post_execute(data)
         return
 
     # If no specific dice are listed, perform default roll
     if data.GetParamCount() == 1:
-        post_execute("Rolling 1d20... " + str(Parent.GetRandom(1, 21)))
+        post_execute(data, "Rolling 1d20... " + str(Parent.GetRandom(1, 21)))
         return
 
     try:
@@ -148,7 +148,7 @@ def Execute(data):
 
     except DiceError as de:
         # It's here at the top level that we look at the error and let the user know about the error.
-        post_execute(de.message)
+        post_execute(data, de.message)
         return
 
     response = "Rolling "
@@ -162,7 +162,7 @@ def Execute(data):
     else:
         response += str(dice_sum)
 
-    post_execute(response)
+    post_execute(data, response)
     return
 
 
@@ -304,7 +304,7 @@ def handle_die_roll(dice):
     return die_roll_results
 
 
-def post_execute(message=None):
+def post_execute(data, message=None):
     """Should always be called right before the script ends processing a command."""
     if message is not None:
         Parent.SendTwitchMessage(message)
