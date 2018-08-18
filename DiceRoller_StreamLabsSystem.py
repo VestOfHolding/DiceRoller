@@ -370,4 +370,4 @@ class InvalidDiceCharacterError(DiceError):
 class NonASCIIDiceError(InvalidDiceCharacterError):
     """Non-ASCII characters were found in the user input."""
     def __init__(self):
-        super(NonASCIIDiceError, self).__init__(msg="I will shit on your desk.")
+        super(NonASCIIDiceError, self).__init__(msg="Why do you do this to me?")
