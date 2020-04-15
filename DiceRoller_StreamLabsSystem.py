@@ -16,9 +16,10 @@ clr.AddReference("IronPython.Modules.dll")
 # ---------------------------------------
 ScriptName = "DiceRoller"
 Website = "https://www.twitch.tv/vestofholding"
+# Website2 = "https://github.com/VestOfHolding/DiceRoller"
 Description = "Roll multi-sided dice in chat."
 Creator = "VestOfHolding"
-Version = "1.0"
+Version = "1.1"
 
 # ---------------------------------------
 # Set Variables
@@ -28,7 +29,7 @@ Version = "1.0"
 m_validChars = re.compile('[0-9+d ]+', re.IGNORECASE)
 # This should match against the individual dice argument, such as "2d20", but note the dice number and dice side limit.
 # The limits are a little higher than the actual limits so that users can change those limits in the future better,
-# and to increase the liklihood of accurate error messages being produced.
+# and to increase the likelihood of accurate error messages being produced.
 m_rollFormat = re.compile('^([1-9]\d{0,7})?(d)([1-9]\d{0,7})$', re.IGNORECASE)
 
 m_max_die_sides = 1000
@@ -292,7 +293,7 @@ def handle_die_roll(dice):
     die_roll_results = []
 
     for x in xrange(0, num_dice):
-        die_result = Parent.GetRandom(1, num_dice_sides)
+        die_result = Parent.GetRandom(1, num_dice_sides + 1)
 
         # If for some reason we went past all of the above checking and something still happened
         # the likely result will be that we get a 0. Therefore check for that and report the error.
