@@ -3,7 +3,7 @@
 
 Created by: VestOfHolding - www.twitch.tv/vestofholding
 
-Version: 1.0
+Version: 1.1
 
 This is a dice-rolling script designed to handle rolling multiple dice of number of sides at once as a custom script for use with [StreamLabs Chatbot](https://streamlabs.com/chatbot).
 
@@ -57,6 +57,6 @@ This script uses [dice notation](https://en.wikipedia.org/wiki/Dice_notation) to
 ### 1.1
 - Fixed a bug where the max specified number would never be rolled.
   - Example: `!roll 1d10` would never be able to roll a 10. Now fixed.
-  
+
 ### 1.0
 - Initial Release
